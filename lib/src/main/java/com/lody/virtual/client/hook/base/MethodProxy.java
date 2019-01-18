@@ -3,6 +3,7 @@ package com.lody.virtual.client.hook.base;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.util.Log;
 
 import com.lody.virtual.client.VClientImpl;
 import com.lody.virtual.client.core.VirtualCore;
@@ -17,6 +18,8 @@ import java.lang.reflect.Method;
  * @author Lody
  */
 public abstract class MethodProxy {
+
+    protected static final String TAG = MethodProxy.class.getSimpleName();
 
     private boolean enable = true;
     private LogInvocation.Condition mInvocationLoggingCondition = LogInvocation.Condition.NEVER; // Inherit
@@ -85,10 +88,12 @@ public abstract class MethodProxy {
     public abstract String getMethodName();
 
     public boolean beforeCall(Object who, Method method, Object... args) {
+        Log.e(TAG, "beforeCall: " + method.getName());
         return true;
     }
 
     public Object call(Object who, Method method, Object... args) throws Throwable {
+        Log.e(TAG, "call: " + method.getName());
         return method.invoke(who, args);
     }
 

@@ -16,7 +16,9 @@ import android.content.pm.Signature;
 import android.os.Build;
 import android.os.Parcel;
 import android.text.TextUtils;
+import android.util.Log;
 
+import com.lody.virtual.client.VClientImpl;
 import com.lody.virtual.client.core.VirtualCore;
 import com.lody.virtual.client.fixer.ComponentFixer;
 import com.lody.virtual.helper.collection.ArrayMap;
@@ -34,6 +36,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import mirror.android.app.LoadedApk;
 import mirror.android.content.pm.ApplicationInfoL;
 import mirror.android.content.pm.ApplicationInfoN;
 

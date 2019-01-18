@@ -8,6 +8,8 @@ package com.lody.virtual.client.interfaces;
  */
 public interface IInjector {
 
+	String TAG = IInjector.class.getSimpleName();
+
 	/**
 	 *
      * Do injection.

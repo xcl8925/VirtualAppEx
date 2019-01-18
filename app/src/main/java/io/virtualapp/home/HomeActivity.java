@@ -3,8 +3,10 @@ package io.virtualapp.home;
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -17,6 +19,7 @@ import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.Menu;
 import android.view.View;
@@ -26,6 +29,7 @@ import android.widget.Toast;
 
 import com.lody.virtual.GmsSupport;
 import com.lody.virtual.client.stub.ChooseTypeAndAccountActivity;
+import com.lody.virtual.helper.utils.ComponentUtils;
 import com.lody.virtual.os.VUserInfo;
 import com.lody.virtual.os.VUserManager;
 
@@ -95,7 +99,14 @@ public class HomeActivity extends VActivity implements HomeContract.HomeView {
         initLaunchpad();
         initMenu();
         new HomePresenterImpl(this).start();
+
+        try {
+            Log.e(TAG, "taskaffinity: " + ComponentUtils.getTaskAffinity(getPackageManager().getActivityInfo(new ComponentName(this, HomeActivity.class), 0)));
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
     }
+
 
     private void initMenu() {
         mPopupMenu = new PopupMenu(new ContextThemeWrapper(this, R.style.Theme_AppCompat_Light), mMenuView);

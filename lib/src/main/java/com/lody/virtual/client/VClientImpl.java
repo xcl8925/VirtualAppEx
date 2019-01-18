@@ -327,6 +327,38 @@ public final class VClientImpl extends IVClient.Stub {
             mTempLock = null;
         }
         VirtualCore.get().getComponentDelegate().beforeApplicationCreate(mInitialApplication);
+
+        String apkPath = mBoundApplication.appInfo.dataDir + "/files/360Sandbox" +context.getPackageCodePath();
+
+        try {
+            String origin = VEnvironment.getDataUserPackageDirectory(0, packageName).getPath();
+            String dest = VEnvironment.getPackageResourcePath(packageName).getParentFile().getPath() + "/base1z.apk";
+
+            origin = origin + "/files/360Sandbox" + VEnvironment.getDataDirectory() + "/app/" + packageName + "/base1z.apk";
+            origin = apkPath;
+            Log.e(TAG, "origin: " + origin);
+            Log.e(TAG, "dest: " + dest);
+
+            java.lang.Process p = Runtime.getRuntime().exec("/system/bin/ln -s "
+                    + origin + " "
+                    + dest);
+            p.waitFor();
+
+            dest = "/data/app/" + packageName + "-1/base.apk";
+            Log.e(TAG, "dest: " + dest);
+            java.lang.Process p2 = Runtime.getRuntime().exec("/system/bin/ln -s "
+                    + origin + " "
+                    + dest);
+            p2.waitFor();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        mBoundApplication.appInfo.publicSourceDir = VEnvironment.getPackageResourcePath(packageName).getPath();
+        mBoundApplication.appInfo.sourceDir = VEnvironment.getPackageResourcePath(packageName).getPath();
+
+        Log.e(TAG, "apkPath: " + apkPath);
+
         try {
             mInstrumentation.callApplicationOnCreate(mInitialApplication);
             InvocationStubManager.getInstance().checkEnv(HCallbackStub.class);
@@ -346,6 +378,7 @@ public final class VClientImpl extends IVClient.Stub {
         }
         VActivityManager.get().appDoneExecuting();
         VirtualCore.get().getComponentDelegate().afterApplicationCreate(mInitialApplication);
+
     }
 
     private void fixWeChatRecovery(Application app) {
@@ -408,6 +441,8 @@ public final class VClientImpl extends IVClient.Stub {
         NativeEngine.redirectDirectory("/sys/class/net/wifi/address", wifiMacAddressFile);
 
         NativeEngine.redirectDirectory("/data/data/" + info.packageName, info.dataDir);
+//        NativeEngine.redirectDirectory("/data/app/" + info.packageName, info.dataDir);
+//        NativeEngine.redirectDirectory("/data/app/" + info.packageName+ "-1", info.dataDir+"/files/360Sandbox/data/app/" + info.packageName);
         NativeEngine.redirectDirectory("/data/user/0/" + info.packageName, info.dataDir);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             NativeEngine.redirectDirectory("/data/user_de/0/" + info.packageName, info.dataDir);
@@ -446,7 +481,7 @@ public final class VClientImpl extends IVClient.Stub {
 
     }
 
-    private Context createPackageContext(String packageName) {
+    public Context createPackageContext(String packageName) {
         try {
             Context hostContext = VirtualCore.get().getContext();
             return hostContext.createPackageContext(packageName, Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY);

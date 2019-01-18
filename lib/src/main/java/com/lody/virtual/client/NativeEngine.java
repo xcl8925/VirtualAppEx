@@ -3,6 +3,7 @@ package com.lody.virtual.client;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Process;
+import android.util.Log;
 
 import com.lody.virtual.client.core.VirtualCore;
 import com.lody.virtual.client.env.VirtualRuntime;
@@ -82,6 +83,7 @@ public class NativeEngine {
             newPath = newPath + "/";
         }
         try {
+//            Log.e(TAG, origPath + "...to..."+ newPath);
             nativeIORedirect(origPath, newPath);
         } catch (Throwable e) {
             VLog.e(TAG, VLog.getStackTraceString(e));

@@ -395,6 +395,7 @@ public final class VirtualCore {
             // reuse the intent instance
             intentToResolve.removeCategory(Intent.CATEGORY_INFO);
             intentToResolve.addCategory(Intent.CATEGORY_LAUNCHER);
+//            intentToResolve.addCategory("android.intent.category.360BYOD_LAUNCHER");
             intentToResolve.setPackage(packageName);
             ris = pm.queryIntentActivities(intentToResolve, intentToResolve.resolveType(context), 0, userId);
         }

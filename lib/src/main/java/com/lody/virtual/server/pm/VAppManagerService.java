@@ -196,6 +196,7 @@ public class VAppManagerService implements IAppManager {
         NativeLibraryHelperCompat.copyNativeBinaries(new File(path), libDir);
         if (!dependSystem) {
             File privatePackageFile = new File(appDir, "base.apk");
+//            File privatePackageFile = new File(appDir, "base.apk");
             File parentFolder = privatePackageFile.getParentFile();
             if (!parentFolder.exists() && !parentFolder.mkdirs()) {
                 VLog.w(TAG, "Warning: unable to create folder : " + privatePackageFile.getPath());
