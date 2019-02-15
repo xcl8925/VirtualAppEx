@@ -1,6 +1,7 @@
 package io.virtualapp;
 
 import android.content.Context;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.support.multidex.MultiDexApplication;
 
@@ -15,6 +16,10 @@ import io.virtualapp.delegate.MyPhoneInfoDelegate;
 import io.virtualapp.delegate.MyTaskDescriptionDelegate;
 import jonathanfinerty.once.Once;
 
+import static android.content.Intent.ACTION_PACKAGE_ADDED;
+import static android.content.Intent.ACTION_PACKAGE_REMOVED;
+import static android.content.Intent.ACTION_PACKAGE_REPLACED;
+
 /**
  * @author Lody
  */
@@ -22,6 +27,7 @@ public class VApp extends MultiDexApplication {
 
     private static VApp gApp;
     private SharedPreferences mPreferences;
+    private PackageReceiver packageReceiver = null;
 
     public static VApp getApp() {
         return gApp;
@@ -82,6 +88,17 @@ public class VApp extends MultiDexApplication {
                 virtualCore.addVisibleOutsidePackage("com.immomo.momo");
             }
         });
+        registerPackageChangeReceiver();
+    }
+
+    private void registerPackageChangeReceiver() {
+        packageReceiver = new PackageReceiver();
+        IntentFilter updateDataFilter = new IntentFilter();
+        updateDataFilter.addAction(ACTION_PACKAGE_ADDED);
+        updateDataFilter.addAction(ACTION_PACKAGE_REPLACED);
+        updateDataFilter.addAction(ACTION_PACKAGE_REMOVED);
+        updateDataFilter.addDataScheme("package");
+        registerReceiver(packageReceiver, updateDataFilter);
     }
 
     public static SharedPreferences getPreferences() {

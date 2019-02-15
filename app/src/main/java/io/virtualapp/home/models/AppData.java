@@ -16,6 +16,8 @@ public interface AppData {
 
     String getName();
 
+    String getPackageName();
+
     boolean canReorder();
 
     boolean canLaunch();

@@ -29,6 +29,11 @@ public class EmptyAppData implements AppData {
     }
 
     @Override
+    public String getPackageName() {
+        return null;
+    }
+
+    @Override
     public boolean canReorder() {
         return false;
     }

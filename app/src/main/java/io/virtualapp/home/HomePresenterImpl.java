@@ -2,9 +2,11 @@ package io.virtualapp.home;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
+import android.util.Log;
 
 import com.lody.virtual.GmsSupport;
 import com.lody.virtual.client.core.VirtualCore;
+import com.lody.virtual.helper.utils.VLog;
 import com.lody.virtual.os.VUserInfo;
 import com.lody.virtual.os.VUserManager;
 import com.lody.virtual.remote.InstallResult;
@@ -123,14 +125,18 @@ class HomePresenterImpl implements HomeContract.HomePresenter {
             }
         }).then((res) -> {
             addResult.appData = PackageAppDataStorage.get().acquire(info.packageName);
+        }).fail((e) -> {
+            Log.i("compatibilityTest", ">>>>>>virtual app install " + info.packageName + " failed: " + VLog.getStackTraceString(e));
         }).done(res -> {
             boolean multipleVersion = addResult.justEnableHidden && addResult.userId != 0;
             if (!multipleVersion) {
                 PackageAppData data = addResult.appData;
                 data.isLoading = true;
+                Log.i("compatibilityTest", ">>>>>>virtual app install " + info.packageName + " success,addResult.userId = " + addResult.userId);
                 mView.addAppToLauncher(data);
                 handleOptApp(data, info.packageName, true);
             } else {
+                Log.i("compatibilityTest", ">>>>>>virtual app install " + info.packageName + " success,addResult.userId = " + addResult.userId);
                 MultiplePackageAppData data = new MultiplePackageAppData(addResult.appData, addResult.userId);
                 data.isLoading = true;
                 mView.addAppToLauncher(data);

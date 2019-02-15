@@ -62,6 +62,11 @@ public class PackageAppData implements AppData {
     }
 
     @Override
+    public String getPackageName() {
+        return packageName;
+    }
+
+    @Override
     public boolean canReorder() {
         return true;
     }

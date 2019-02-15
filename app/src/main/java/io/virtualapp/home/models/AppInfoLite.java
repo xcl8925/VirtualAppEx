@@ -24,6 +24,10 @@ public class AppInfoLite implements Parcelable {
     public String path;
     public boolean fastOpen;
 
+    public AppInfoLite(AppInfo appInfo) {
+        this(appInfo.packageName, appInfo.path, appInfo.fastOpen);
+    }
+
     public AppInfoLite(String packageName, String path, boolean fastOpen) {
         this.packageName = packageName;
         this.path = path;

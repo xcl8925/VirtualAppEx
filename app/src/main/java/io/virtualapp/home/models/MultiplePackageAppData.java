@@ -17,6 +17,7 @@ public class MultiplePackageAppData implements AppData {
     public boolean isLoading;
     public Drawable icon;
     public String name;
+    public String packageName;
 
     public MultiplePackageAppData(PackageAppData target, int userId) {
         this.userId = userId;
@@ -29,6 +30,7 @@ public class MultiplePackageAppData implements AppData {
             }
         }
         name = target.name;
+        packageName = target.packageName;
     }
 
     @Override
@@ -49,6 +51,11 @@ public class MultiplePackageAppData implements AppData {
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public String getPackageName() {
+        return packageName;
     }
 
     @Override

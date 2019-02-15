@@ -3,9 +3,12 @@ package io.virtualapp.home;
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -13,12 +16,14 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.Nullable;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.OrientationHelper;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.Menu;
@@ -47,6 +52,7 @@ import io.virtualapp.home.adapters.decorations.ItemOffsetDecoration;
 import io.virtualapp.home.location.VirtualLocationSettings;
 import io.virtualapp.home.models.AddAppButton;
 import io.virtualapp.home.models.AppData;
+import io.virtualapp.home.models.AppInfo;
 import io.virtualapp.home.models.AppInfoLite;
 import io.virtualapp.home.models.EmptyAppData;
 import io.virtualapp.home.models.MultiplePackageAppData;
@@ -80,6 +86,11 @@ public class HomeActivity extends VActivity implements HomeContract.HomeView {
     private TextView mDeleteAppTextView;
     private LaunchpadAdapter mLaunchpadAdapter;
     private Handler mUiHandler;
+    private ListAppPresenterImpl mGetOSInstalledAppIml = null;
+    public static final String ACTION_TO_ADD_PACKAGE = "action_to_add_package";
+    public static final String ACTION_TO_REMOVE_PACKAGE = "action_to_remove_package";
+    public static final String TO_ADD_OR_REMOVE_PACKAGE_NAME = "to_add_package_name";
+    private String currentPackageName = null;
 
 
     public static void goHome(Context context) {
@@ -105,6 +116,9 @@ public class HomeActivity extends VActivity implements HomeContract.HomeView {
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
+
+        registerPackageChangeReceiver();
+        registerStartChildReceiver();
     }
 
 
@@ -491,4 +505,140 @@ public class HomeActivity extends VActivity implements HomeContract.HomeView {
             }
         }
     }
+
+    private void registerPackageChangeReceiver() {
+        IntentFilter updateDataFilter = new IntentFilter();
+        updateDataFilter.addAction(ACTION_TO_ADD_PACKAGE);
+        updateDataFilter.addAction(ACTION_TO_REMOVE_PACKAGE);
+        LocalBroadcastManager.getInstance(this).registerReceiver(packageChangeReceiver, updateDataFilter);
+    }
+
+    private void registerStartChildReceiver() {
+        IntentFilter updateDataFilter = new IntentFilter();
+        updateDataFilter.addAction("io.busniess.va.action.startchild");
+        registerReceiver(startChildBR, updateDataFilter);
+    }
+
+    private BroadcastReceiver packageChangeReceiver = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            // if there errors, set them into a ErrorMsgData object.
+            if (action == null) return;
+            if (action.equals(ACTION_TO_ADD_PACKAGE)) {
+                // show loading indicator
+                currentPackageName = intent.getStringExtra(TO_ADD_OR_REMOVE_PACKAGE_NAME);
+                Log.i("compatibilityTest", ">>>>>>current added package name = " + currentPackageName);
+                /**
+                 * 如果立马安装完，可能脚本日志检测还没有开始，错过日志检测，所以延迟1妙安装
+                 */
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (mGetOSInstalledAppIml == null) {
+                            mGetOSInstalledAppIml = new ListAppPresenterImpl(HomeActivity.this, getOSInstallAppsCallback, null);
+                            mGetOSInstalledAppIml.start();
+                        } else {
+                            mGetOSInstalledAppIml.start();
+                        }
+                    }
+                }, 1000);
+            } else if (action.equals(ACTION_TO_REMOVE_PACKAGE)) {
+                currentPackageName = intent.getStringExtra(TO_ADD_OR_REMOVE_PACKAGE_NAME);
+                Log.i("compatibilityTest", ">>>>>>current removed package name = " + currentPackageName);
+                removePackageByReceiver(currentPackageName);
+            }
+        }
+    };
+
+    private BroadcastReceiver startChildBR = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction() != null && intent.getAction().equals("io.busniess.va.action.startchild")) {
+                String pkgName = intent.getStringExtra("packagename");
+                if (!TextUtils.isEmpty(pkgName)) {
+                    Log.e("startChildBR", intent.getAction() + "-" + pkgName);
+                    launchPkgName(pkgName);
+                }
+            }
+        }
+    };
+
+    private void removePackageByReceiver(String packageName) {
+        if (!isFinishing() && packageName != null) {
+            List<AppData> mAppList = mLaunchpadAdapter.getList();
+            if (mAppList != null && mAppList.size() > 1) {
+                int i = 0;
+                AppData appData = null;
+                for (i = 0; i < mAppList.size(); i++) {
+                    appData = mAppList.get(i);
+                    if (!TextUtils.isEmpty(appData.getPackageName()) && appData.getPackageName().equals(packageName)) {
+                        mPresenter.deleteApp(appData);
+                        break;
+                    }
+                }
+            }
+        }
+
+    }
+
+    private void launchPkgName(String pkgName) {
+        currentPackageName = pkgName;
+        if (!TextUtils.isEmpty(currentPackageName)) {
+            List<AppData> mAppList = mLaunchpadAdapter.getList();
+            if (mAppList != null && mAppList.size() > 1) {
+                int i;
+                AppData appData;
+                for (i = 0; i < mAppList.size(); i++) {
+                    appData = mAppList.get(i);
+                    if (!TextUtils.isEmpty(appData.getPackageName()) && appData.getPackageName().equals(currentPackageName)) {
+                        mLaunchpadAdapter.notifyItemChanged(i);
+                        mPresenter.launchApp(appData);
+                        Log.e(TAG, "launchPkgName, launchPkgName.launchApp:" + currentPackageName);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private ListAppContract.ListAppView getOSInstallAppsCallback = new ListAppContract.ListAppView() {
+        @Override
+        public void startLoading() {
+
+        }
+
+        @Override
+        public void loadFinish(List<AppInfo> infoList) {
+            Log.i("compatibilityTest", ">>>>>>installed app info loadFinish");
+            if (infoList != null && currentPackageName != null) {
+                for (int i = 0; i < infoList.size(); i++) {
+                    AppInfo appInfo = infoList.get(i);
+                    if (appInfo.packageName.equals(currentPackageName)) {
+                        AppInfoLite appInfoLite = new AppInfoLite(appInfo);
+                        if (appInfoLite != null) {
+                            mPresenter.addApp(appInfoLite);
+                        }
+                    }
+                }
+            }
+        }
+
+        @Override
+        public Activity getActivity() {
+            return HomeActivity.this;
+        }
+
+        @Override
+        public Context getContext() {
+            return HomeActivity.this;
+        }
+
+        @Override
+        public void setPresenter(ListAppContract.ListAppPresenter presenter) {
+
+        }
+    };
+
 }
